@@ -91,11 +91,15 @@
 <body>
     <div id="letter-display">⌨️</div>
     <div class="instruction">Press any letter or number key to start!</div>
+    <input type="text" id="mobileInput" style="position: absolute; top: -9999px; left: -9999px; opacity: 0; pointer-events: none;">
 
     <script>
         const letterDisplay = document.getElementById('letter-display');
+        const mobileInput = document.getElementById('mobileInput');
+        const instructionText = document.querySelector('.instruction');
         const synth = window.speechSynthesis;
-        
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
         function speakLetter(letter) {
             synth.cancel(); // Stop previous speech
             const utterance = new SpeechSynthesisUtterance(letter.toLowerCase()); // Use lowercase to prevent "Capital" announcement
@@ -130,8 +134,8 @@
             document.body.appendChild(container);
         }
 
-        document.addEventListener('keydown', (e) => {
-            const key = e.key.toUpperCase();
+        function handleDesktopInput(e) {
+             const key = e.key.toUpperCase();
             if (key.length === 1 && key.match(/[A-Z0-9]/)) {
                 // Update display with random color
                 const randomHue = Math.floor(Math.random() * 360);
@@ -151,7 +155,47 @@
                 // Speak the letter
                 speakLetter(key);
             }
-        });
+        }
+
+        function handleMobileInput(e) {
+            const key = e.target.value.slice(-1).toUpperCase(); // Get the last typed character
+            if (key.length === 1 && key.match(/[A-Z0-9]/)) {
+                // Update display with random color
+                const randomHue = Math.floor(Math.random() * 360);
+                letterDisplay.style.color = `hsl(${randomHue}, 80%, 50%)`;
+                letterDisplay.style.textShadow = `3px 3px 0 hsl(${(randomHue + 180) % 360}, 80%, 50%)`;
+                letterDisplay.textContent = key;
+                
+                // Trigger bounce animation
+                letterDisplay.style.animation = 'none';
+                void letterDisplay.offsetWidth;
+                letterDisplay.style.animation = 'pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                
+                // Create 2 balloons on each key press
+                createBalloon();
+                createBalloon();
+                
+                // Speak the letter
+                speakLetter(key);
+            }
+            // Clear the input field quickly to allow re-typing the same letter
+            setTimeout(() => {
+                e.target.value = '';
+            }, 10);
+        }
+
+        if (isMobile) {
+            instructionText.textContent = "Tap here & type a letter or number!";
+            // Focus the hidden input on tap anywhere to bring up keyboard
+            document.body.addEventListener('click', () => {
+                mobileInput.focus();
+            });
+            mobileInput.addEventListener('input', handleMobileInput);
+            // Remove the desktop listener if mobile
+            document.removeEventListener('keydown', handleDesktopInput); 
+        } else {
+             document.addEventListener('keydown', handleDesktopInput);
+        }
 
         // Create initial floating shapes
         createFloatingShapes();
