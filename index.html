@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyboard Learning App</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #F0F9FF;
+            font-family: Arial, sans-serif;
+        }
+
+        #letter-display {
+            font-size: 40vw;
+            color: #1E3A8A;
+            text-align: center;
+            user-select: none;
+            text-transform: uppercase;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            text-shadow: 3px 3px 0 #FFD700,
+                        -1px -1px 0 #FFD700,  
+                        1px -1px 0 #FFD700,
+                        -1px 1px 0 #FFD700,
+                        1px 1px 0 #FFD700;
+            animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop {
+            0% { transform: translateY(0) scale(1); }
+            25% { transform: translateY(-30px) scale(1.2); }
+            50% { transform: translateY(0) scale(0.9); }
+            75% { transform: translateY(-15px) scale(1.1); }
+            100% { transform: translateY(0) scale(1); }
+        }
+
+        .balloon {
+            position: absolute;
+            width: 80px;
+            height: 100px;
+            background: #ff4081;
+            border-radius: 80%;
+            animation: float 4s ease-in forwards;
+            cursor: pointer;
+        }
+
+        .balloon:before {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 35px;
+            width: 10px;
+            height: 15px;
+            background: #ff4081;
+            border-radius: 0 0 10px 10px;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotateZ(0deg); }
+            100% { transform: translateY(-100vh) rotateZ(360deg); }
+        }
+
+        .floating-shapes div {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(255,64,129,0.1);
+            border-radius: 20px;
+            animation: drift 20s linear infinite;
+        }
+
+        @keyframes drift {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-100vh) rotate(360deg); }
+        }
+
+        .instruction {
+            position: fixed;
+            bottom: 20px;
+            font-size: 2em;
+            color: #1E3A8A;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="letter-display">⌨️</div>
+    <div class="instruction">Press any letter or number key to start!</div>
+
+    <script>
+        const letterDisplay = document.getElementById('letter-display');
+        const synth = window.speechSynthesis;
+        
+        function speakLetter(letter) {
+            synth.cancel(); // Stop previous speech
+            const utterance = new SpeechSynthesisUtterance(letter.toLowerCase()); // Use lowercase to prevent "Capital" announcement
+            utterance.lang = 'en-US'; // Set language to prevent "Capital" prefix
+            utterance.pitch = 1.5;
+            utterance.rate = 0.8;
+            synth.speak(utterance);
+        }
+
+        function createBalloon() {
+            const balloon = document.createElement('div');
+            balloon.className = 'balloon';
+            balloon.style.left = Math.random() * 90 + '%';
+            balloon.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 70%)`;
+            document.body.appendChild(balloon);
+            
+            balloon.addEventListener('animationend', () => {
+                balloon.remove();
+            });
+        }
+
+        function createFloatingShapes() {
+            const container = document.createElement('div');
+            container.className = 'floating-shapes';
+            
+            for (let i = 0; i < 8; i++) {
+                const shape = document.createElement('div');
+                shape.style.left = Math.random() * 90 + '%';
+                shape.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(shape);
+            }
+            document.body.appendChild(container);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const key = e.key.toUpperCase();
+            if (key.length === 1 && key.match(/[A-Z0-9]/)) {
+                // Update display with random color
+                const randomHue = Math.floor(Math.random() * 360);
+                letterDisplay.style.color = `hsl(${randomHue}, 80%, 50%)`;
+                letterDisplay.style.textShadow = `3px 3px 0 hsl(${(randomHue + 180) % 360}, 80%, 50%)`;
+                letterDisplay.textContent = key;
+                
+                // Trigger bounce animation
+                letterDisplay.style.animation = 'none';
+                void letterDisplay.offsetWidth;
+                letterDisplay.style.animation = 'pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                
+                // Create 2 balloons on each key press
+                createBalloon();
+                createBalloon();
+                
+                // Speak the letter
+                speakLetter(key);
+            }
+        });
+
+        // Create initial floating shapes
+        createFloatingShapes();
+    </script>
+</body>
+</html>
